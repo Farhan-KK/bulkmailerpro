@@ -6,7 +6,9 @@ from email.mime.base import MIMEBase
 from email import encoders
 import os
 import time
-
+from dotenv import load_dotenv, dotenv_values 
+# loading variables from .env file
+load_dotenv() 
 # Function to send email with attachment
 def send_email(to_email, subject, body, from_email, from_password, attachment_path=None):
     try:
@@ -69,38 +71,53 @@ def send_email_with_retry(to_email, subject, body, from_email, from_password, at
     return False
 
 # Read the CSV file
-file_path = r'D:\Conclave.xlsx'  # Specify the correct path to your Excel file
-attendees_data = pd.read_excel(file_path, engine='openpyxl')  # Use read_excel for .xlsx files
+file_path = r'test.csv'  # Specify the correct path to your Excel file
+attendees_data = pd.read_csv(file_path)
 
 
 # Email credentials
-from_email = ''  # Replace with your email
-from_password = ''  # Replace with your app password
+from_email = os.getenv("FROM_EMAIL") 
+from_password = os.getenv("EMAIL_PASSWORD") 
 
 # Email content template with placeholders
-subject = 'International Conclave on Next-Gen Higher Education - Ticket'
+subject = 'International Conclave on Next-Gen Higher Education - Certificate'
 body_template = '''
-Dear {name},<br><br>
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
 
-Warm greetings from the Department of Higher Education, Government of Kerala!<br><br>
+<p>Dear {name},</p>
 
-We are delighted to confirm your registration for the International Conclave on Next-Gen Higher Education. Thank you for joining us in this prestigious event dedicated to shaping the future of education.<br><br>
+<p>Warm greetings!</p>
 
-<b>Event Details</b><br>
-Date: January 14–15, 2025<br>
-Time: 9:00 am<br>
-Venue: Cochin University of Science and Technology, Kochi<br>
-Location Link: <a href="https://maps.app.goo.gl/pqdb3ymzjdaxNQ7R8">Seminar Complex, CUSAT</a><br><br>
+<p>
+    Please find attached your Duty Certificate and Participation Certificate for the 
+    <strong>International Conclave on Next-Gen Higher Education</strong>.
+</p>
 
-Click here to access your ticket:{url}<br>This ticket contains a unique QR code that must be presented at the registration desk upon your arrival.<br><br>
+<p>
+    <strong>Participation Certificate:</strong> <a href="{url1}">{url1}</a><br>
+    <strong>Duty Certificate:</strong> <a href="{url2}">{url2}</a>
+</p>
 
+<p>
+    We deeply appreciate your valuable contribution and active participation in making this event a success.
+</p>
 
-Our team looks forward to welcoming you and ensuring your participation is seamless and enjoyable.<br><br>
+<p>
+    Thank you once again for being part of this memorable event!
+</p>
 
-Warm regards,<br>
-Event Team<br>
-Department of Higher Education, Government of Kerala
+<p>
+    Best regards,<br>
+    <strong>Event Team</strong><br>
+    <em>International Conclave on Next-Gen Higher Education</em>
+</p>
+
+</body>
+</html>
 '''
+
 
 
 # List of attachments (if any)
@@ -116,10 +133,11 @@ batch_delay = 10 * 60  # 10 minutes delay between batches in seconds
 for index, row in attendees_data.iterrows():
     to_email = row['email']
     name = row['name']
-    url = row['ticket url']
+    url1 = row['participant_link']
+    url2 = row['duty_link']
 
     # Generate the email body with placeholders filled in
-    body = body_template.format(name=name, url=url)
+    body = body_template.format(name=name, url1=url1, url2=url2)
     total_emails += 1
 
     # Send email with all attachments
